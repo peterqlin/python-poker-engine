@@ -18,7 +18,16 @@ class NoLimitBettingEngine:
 
     def betting_round(self, start_player_idx=0):
         for i in range(self.num_players):
-            self.players[(start_player_idx + i) % self.num_players].bet(self.big_blind) # wraparound logic to prevent out of range error when start_player_idx > 0
+            p = self.players[(start_player_idx + i) % self.num_players] # wraparound to prevent list out of range
+            done = False
+            while not done:
+                try:
+                    print(f"Enter bet amount for player {p.id}: ", end="")
+                    bet_amount = input()
+                    p.remove_money(int(bet_amount))
+                    done = True
+                except Exception as e:
+                    print(f"Try again: {e}")
 
 # TODO: implement no limit, then generalize and create a game-agnostic engine that can easily be adapted to limit and PLO
 

@@ -50,9 +50,9 @@ class Player:
         """
         self.hand = []
 
-    def bet(self, amount):
+    def remove_money(self, amount):
         """
-        place a bet
+        subtract some amount of money from player's funds
         """
         assert amount <= self.money, "Bet exceeds player's funds"
         self.money -= amount
