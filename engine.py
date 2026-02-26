@@ -17,26 +17,8 @@ class NoLimitBettingEngine:
         self.num_players = len(players)
 
     def betting_round(self, start_player_idx=0):
-        """
-        simulate one round of betting starting with player at start_player_idx
-        skips over inactive players
-        """
-        print("begin betting round")
-        done = False
-        p_idx = start_player_idx
-        bets = [0] * self.num_players
-        max_bet = 0
-        if start_player_idx != 0: # preflop means BB and SB have bets
-            bets[0], bets[1] = self.big_blind // 2, self.big_blind # assume integer blinds and bets
-        while not done:
-            if self.active[p_idx]:
-                self.players[p_idx].bet(self.big_blind) # TODO: bet validation based on game state
-                bets[p_idx] += self.big_blind # yea none of this works without good bet validation
-                max_bet = max(max_bet, bets[p_idx])
-            p_idx = (p_idx + 1) % self.num_players
-            print(f"bets tuple: {tuple(bets[i] for i in range(self.num_players) if self.active[i])}")
-            done = tuple(bets[i] for i in range(self.num_players) if self.active[i]) == (max_bet for i in range(self.num_players) if self.active[i])
-
+        for i in range(self.num_players):
+            self.players[(start_player_idx + i) % self.num_players].bet(self.big_blind) # wraparound logic to prevent out of range error when start_player_idx > 0
 
 # TODO: implement no limit, then generalize and create a game-agnostic engine that can easily be adapted to limit and PLO
 
@@ -56,7 +38,7 @@ class NoLimitHoldemEngine:
         random.seed(seed) # seed for reproducibility
         self.deck = Deck()
         self.num_players = num_players
-        self.players = [Player(i, [], 100) for i in range(num_players)]
+        self.players = [Player(chr(ord("A") + i), [], 100) for i in range(num_players)]
         self.hand_size = hand_size
         self.stage = "setup" # setup -> deal -> preflop -> flop -> turn -> river -> back to deal
 
@@ -68,6 +50,7 @@ class NoLimitHoldemEngine:
         print(f"stage: {self.stage}")
         for player in self.players:
             print(player)
+        print()
 
     def setup(self):
         """
@@ -93,17 +76,22 @@ class NoLimitHoldemEngine:
         assert self.stage == "preflop", "Current stage is not 'preflop'"
         # UTG sits at index 2 (after SB and BB)
         utg_idx = 2 % self.num_players # prevent out of bounds access when there are only 2 players
-        # TODO: abstract betting loop into a reusable BettingEngine
         self.b.betting_round(start_player_idx=utg_idx)
-
         self.stage = "flop"
 
     def flop(self):
-        pass
+        assert self.stage == "flop", "Current stage is not 'flop'"
+        self.b.betting_round()
+        self.stage = "turn"
 
     def turn(self):
-        pass
+        assert self.stage == "turn", "Current stage is not 'turn'"
+        self.b.betting_round()
+        self.stage = "river"
 
     def river(self):
-        pass
+        assert self.stage == "river", "Current stage is not 'river'"
+        self.b.betting_round()
+        self.stage = "showdown"
+
 

@@ -30,7 +30,7 @@ class Deck:
         return removed
 
 class Player:
-    def __init__(self, id: int, hand: list[Card], money: int):
+    def __init__(self, id: str, hand: list[Card], money: int):
         self.id = id
         self.hand = hand
         self.money = money
