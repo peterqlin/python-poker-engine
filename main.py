@@ -1,7 +1,7 @@
 from engine import NoLimitHoldemEngine
 
 def main():
-    holdem = NoLimitHoldemEngine(num_players=4)
+    holdem = NoLimitHoldemEngine(num_players=2)
     holdem.show()
     holdem.setup()
     holdem.show()
