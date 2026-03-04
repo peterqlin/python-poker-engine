@@ -16,16 +16,19 @@ class NoLimitBettingEngine:
         self.total_bet = 0
         self.num_players = len(players)
 
-    def betting_round(self, start_player_idx=0):
+    def betting_round(self, start_player_idx=0, min_bet=0):
+        """
+        simulate one round of betting
+        """
+        current_bet = min_bet
+        min_raise_amount = min_bet
         for i in range(self.num_players):
             p = self.players[(start_player_idx + i) % self.num_players] # wraparound to prevent list out of range
-            done = False
-            while not done:
+            print(f"action is on player {p.id}")
+            valid_bet_made = False
+            while not valid_bet_made:
                 try:
                     print(f"Enter bet amount for player {p.id}: ", end="")
-                    bet_amount = input()
-                    p.remove_money(int(bet_amount))
-                    done = True
                 except Exception as e:
                     print(f"Try again: {e}")
 
@@ -81,11 +84,12 @@ class NoLimitHoldemEngine:
                 player.add_cards(dealt_cards)
         self.stage = "preflop"
 
+    # TODO: abstract out the concept of a street instead of hardcoding them all
     def preflop(self):
         assert self.stage == "preflop", "Current stage is not 'preflop'"
         # UTG sits at index 2 (after SB and BB)
         utg_idx = 2 % self.num_players # prevent out of bounds access when there are only 2 players
-        self.b.betting_round(start_player_idx=utg_idx)
+        self.b.betting_round(start_player_idx=utg_idx, min_bet=self.big_blind)
         self.stage = "flop"
 
     def flop(self):
