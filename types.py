@@ -55,5 +55,6 @@ class Player:
         subtract some amount of money from player's funds
         """
         assert amount <= self.money, "Bet exceeds player's funds"
+        print(f"removed {amount} from player {self.id}'s funds")
         self.money -= amount
 

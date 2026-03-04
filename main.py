@@ -9,12 +9,12 @@ def main():
     holdem.show()
     holdem.preflop()
     holdem.show()
-    holdem.flop()
-    holdem.show()
-    holdem.turn()
-    holdem.show()
-    holdem.river()
-    holdem.show()
+    # holdem.flop()
+    # holdem.show()
+    # holdem.turn()
+    # holdem.show()
+    # holdem.river()
+    # holdem.show()
     
 
 if __name__ == "__main__":
