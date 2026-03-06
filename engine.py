@@ -16,12 +16,28 @@ class NoLimitBettingEngine:
         self.num_players = len(players)
 
     # TODO: add bet validation logic
-    def input_bet(self, action_idx):
+    def input_bet(self, action_idx, current_bet, min_raise_amount):
         done_betting = False
         while not done_betting:
             try:
                 print("enter bet: ", end="")
                 bet_amount = int(input())
+
+                if bet_amount == 0: # handle check or fold
+                    if current_bet > 0: # positive bet means betting 0 is a fold
+                        self.active[action_idx] = False
+                        print(f"player folds")
+                    else: # zero bet means betting 0 is a check
+                        print(f"player checks")
+                elif bet_amount < current_bet:
+                    # TODO: handle case where player is all in for less than current_bet
+                    # TODO: handle case where bb checks preflop, currently no way to distinguish bb check and fold
+                    raise Exception(f"bet must be at least {current_bet}")
+                elif bet_amount == current_bet:
+                    print(f"player calls")
+                else: # raise
+                    if bet_amount - current_bet < min_raise_amount:
+                        raise Exception(f"raise must be by at least {min_raise_amount}")
                 done_betting = True
             except Exception as e:
                 print(f"try again: {e}")
@@ -43,19 +59,26 @@ class NoLimitBettingEngine:
         inc = 0
         while not hand_done:
             action_idx = (start_player_idx + inc) % self.num_players # who is the action on
+            pid = self.players[action_idx].id
             if self.active[action_idx]: # only let active players act
-                print(f"action is on player {self.players[action_idx].id}")
-                bet = self.input_bet(action_idx)
-                print(f"{self.players[action_idx].id} bets {bet}")
-                if bet == 0: # interpret bet 0 as fold or check depending on context
-                    if current_bet > 0:
-                        self.active[action_idx] = False
-
+                print(f"action is on player {pid}")
+                bet = self.input_bet(action_idx, current_bet, min_raise_amount)
+                bets[action_idx] = bet
+                if bet > current_bet: # update values when player bets
+                    acted_indices = [action_idx] # if aggressive action, reset acted_indices to only the player who just acted
+                    min_raise_amount = bet - current_bet
+                    current_bet = bet
+                    print(f"{min_raise_amount=}")
+                    print(f"{current_bet=}")
+                else:
+                    acted_indices.append(action_idx) # add idx of player that just acted
+                print(f"{pid} bets {bet}")
                 # hand is done when either one player is active or all active players have acted
                 # if one player is active, then no future streets should play out; the hand is over
                 active_indices = [i for i, _ in enumerate(self.players) if self.active[i]]
                 active_bets = [bets[i] for i in active_indices]
                 print(f"{active_indices=}")
+                print(f"{acted_indices=}")
                 print(f"{active_bets=}")
                 hand_done = len(active_indices) == 1 or set(active_indices) == set(acted_indices)
             inc += 1 # increment action index
