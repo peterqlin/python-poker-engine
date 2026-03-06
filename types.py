@@ -50,6 +50,13 @@ class Player:
         """
         self.hand = []
 
+    def add_money(self, amount):
+        """
+        add some amount of money to player's funds
+        """
+        print(f"added {amount} to player {self.id}'s funds")
+        self.money += amount
+
     def remove_money(self, amount):
         """
         subtract some amount of money from player's funds

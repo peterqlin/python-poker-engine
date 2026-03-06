@@ -49,21 +49,23 @@ class NoLimitBettingEngine:
         """
         bets = [0] * self.num_players
         if initial_bets: # add initial bets, like blinds or straddles
-            for i, b in enumerate(initial_bets):
+            for i, b in enumerate(initial_bets): # TODO: handle case where sb/bb puts player all-in
                 bets[i] = b
 
         current_bet = min_bet
         min_raise_amount = min_bet
+        betting_round_done = False
         hand_done = False
         acted_indices = []
         inc = 0
-        while not hand_done:
+        while not betting_round_done:
             action_idx = (start_player_idx + inc) % self.num_players # who is the action on
             pid = self.players[action_idx].id
             if self.active[action_idx]: # only let active players act
                 print(f"action is on player {pid}")
                 bet = self.input_bet(action_idx, current_bet, min_raise_amount)
-                bets[action_idx] = bet
+                if bet > 0:
+                    bets[action_idx] = bet # only update bets list if bet is a call or raise (updating on check/fold sets it to zero)
                 if bet > current_bet: # update values when player bets
                     acted_indices = [action_idx] # if aggressive action, reset acted_indices to only the player who just acted
                     min_raise_amount = bet - current_bet
@@ -80,8 +82,15 @@ class NoLimitBettingEngine:
                 print(f"{active_indices=}")
                 print(f"{acted_indices=}")
                 print(f"{active_bets=}")
-                hand_done = len(active_indices) == 1 or set(active_indices) == set(acted_indices)
+                hand_done = len(active_indices) == 1 # hand ends prematurely if only one player is left
+                betting_round_done = hand_done or set(active_indices) == set(acted_indices) # round is done when all players have acted
             inc += 1 # increment action index
+        # handle post-betting logic like updating stack sizes
+        print(f"{bets=}")
+        for i, p in enumerate(self.players):
+            p.remove_money(bets[i])
+        if hand_done:
+            self.players[active_indices[0]].add_money(sum(bets)) # get winner via sole active player index
 
 # TODO: implement no limit, then generalize and create a game-agnostic engine that can easily be adapted to limit and PLO
 
@@ -142,12 +151,6 @@ class NoLimitHoldemEngine:
 
         # UTG sits at index 2 (after SB and BB)
         utg_idx = 2 % self.num_players # prevent out of bounds access when there are only 2 players
-
-        # enforce small blind and big blind
-        # players array has length at least 2, so indexing 0 and 1 is safe here
-        # TODO: handle edge case when blind puts player all-in
-        self.players[0].remove_money(self.small_blind)
-        self.players[1].remove_money(self.big_blind)
 
         self.b.betting_round(start_player_idx=utg_idx, min_bet=self.big_blind, initial_bets=[self.small_blind, self.big_blind])
         self.stage = "flop"
